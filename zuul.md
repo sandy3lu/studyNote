@@ -5,7 +5,7 @@ springcloud zuul包含了对请求的路由和过滤两个功能，其中路由�
 ## 配置
 
 ```yml
-zuul:
+zuul: #用来构造ZuulProperties对象
 #需要忽略的头部信息，不在传播到其他服务
   sensitive-headers: Access-Control-Allow-Origin
   ignored-headers: Access-Control-Allow-Origin,H-APP-Id,Token,APPToken
