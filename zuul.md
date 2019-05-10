@@ -2,7 +2,23 @@
 ## 简介
 springcloud zuul包含了对请求的路由和过滤两个功能，其中路由功能负责将外部请求转发到具体的微服务实例上，是实现外部访问统一入口的基础；而过滤器功能则负责对请求的处理过程进行干预，是实现请求校验，服务聚合等功能的基础。然而实际上，路由功能在真正运行时，它的路由映射和请求转发都是由几个不同的过滤器完成的。其中，**路由映射主要通过pre类型的过滤器完成，它将请求路径与配置的路由规则进行匹配，以找到需要转发的目标地址；而请求转发的部分则是由route类型的过滤器来完成，对pre类型过滤器获得的路由地址进行转发。所以说，过滤器可以说是zuul实现api网关功能最核心的部件**，每一个进入zuul的http请求都会经过一系列的过滤器处理链得到请求响应并返回给客户端。
 
+## 配置
 
+```yml
+zuul:
+#需要忽略的头部信息，不在传播到其他服务
+  sensitive-headers: Access-Control-Allow-Origin
+  ignored-headers: Access-Control-Allow-Origin,H-APP-Id,Token,APPToken
+
+  ignored-services: '*'
+  routes:
+    #签章服务
+    pms-pdfsigner: #id
+      path: /pms-pdfsigner/**  #path
+      serviceId: pms-pdfsigner  #serivceId
+```
+
+![](pic/zuul-routes.JPG)
 
 
 ## Filter
@@ -265,10 +281,10 @@ public Object run() {
 
 ```java
 public boolean shouldFilter() {
-		RequestContext ctx = RequestContext.getCurrentContext();
-		return (ctx.getRouteHost() == null && ctx.get(SERVICE_ID_KEY) != null
-				&& ctx.sendZuulResponse());
-	}
+    RequestContext ctx = RequestContext.getCurrentContext();
+    return (ctx.getRouteHost() == null && ctx.get(SERVICE_ID_KEY) != null
+            && ctx.sendZuulResponse());
+}
 ```
 ![](pic/zuulcontext.JPG)
 
@@ -277,9 +293,66 @@ public boolean shouldFilter() {
 
 ![](pic/RibbonCommanContext.png)
 
+```java
+protected ClientHttpResponse forward(RibbonCommandContext context) throws Exception {
+    Map<String, Object> info = this.helper.debug(context.getMethod(),
+            context.getUri(), context.getHeaders(), context.getParams(),
+            context.getRequestEntity());
+
+    RibbonCommand command = this.ribbonCommandFactory.create(context);
+    try {
+        ClientHttpResponse response = command.execute();
+        this.helper.appendDebug(info, response.getRawStatusCode(), response.getHeaders());
+        return response;
+    }
+    catch (HystrixRuntimeException ex) {
+        return handleException(info, ex);
+    }
+
+}
+```
+
+command 开启一个future，执行AbstractRibbonCommand.run方法
+
+```java
+protected ClientHttpResponse run() throws Exception {
+    final RequestContext context = RequestContext.getCurrentContext();
+
+    RQ request = createRequest();
+    RS response;
+    
+    boolean retryableClient = this.client instanceof AbstractLoadBalancingClient
+            && ((AbstractLoadBalancingClient)this.client).isClientRetryable((ContextAwareRequest)request);
+    
+    if (retryableClient) {
+        response = this.client.execute(request, config);
+    } else {
+        response = this.client.executeWithLoadBalancer(request, config);
+    }
+    context.set("ribbonResponse", response);
+
+    // Explicitly close the HttpResponse if the Hystrix command timed out to
+    // release the underlying HTTP connection held by the response.
+    //
+    if (this.isResponseTimedOut()) {
+        if (response != null) {
+            response.close();
+        }
+    }
+
+    return new RibbonHttpResponse(response);
+}
+```
+
+这里的client是AbstractLoadBalanceAwareClient->调用LoadBalancerCommand的submit方法
+->调用RetryableRibbonLoadBalancingHttpClient的execute方法->CloseableHttpClient的execute方法->InternalHttpClient的doExecute方法-->RedirectExec的execute方法--> RetryExec的execute方法-->ProtocolExec的exec方法--> MainClientExec的execute方法--> HttpRequestExecutor的execute方法
 
 
-获取到地址
+
+
+
+
+
 ![](pic/zuulcontext-1.JPG)
 
 
