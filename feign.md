@@ -47,7 +47,24 @@ public class FooConfiguration {
 }
 
 ```
-In this case the client is composed from the components already in FeignClientsConfiguration together with any in FooConfiguration (where the latter will override the former).
+the client is composed from the components already in FeignClientsConfiguration together with any in FooConfiguration (where the latter will override the former).
+
+If we create both `@Configuration` bean and configuration properties, configuration properties will win. It will override @Configuration values. But if you want to change the priority to @Configuration, you can change `feign.client.default-to-properties` to `false`.
+配置的优先级顺序(org.springframework.cloud.openfeign.FeignClientFactoryBean的configureFeign方法):
+
+```java
+if (properties.isDefaultToProperties()) {
+    configureUsingConfiguration(context, builder);
+    configureUsingProperties(properties.getConfig().get(properties.getDefaultConfig()), builder);
+    configureUsingProperties(properties.getConfig().get(this.contextId), builder);
+} else {
+    configureUsingProperties(properties.getConfig().get(properties.getDefaultConfig()), builder);
+    configureUsingProperties(properties.getConfig().get(this.contextId), builder);
+    configureUsingConfiguration(context, builder);
+}
+```
+
+在使用FeignClient时，Spring会按name创建不同的ApplicationContext，通过不同的Context来隔离FeignClient的配置信息，在使用配置类时，不能把配置类放到Spring App Component scan的路径下，否则，配置类会对所有FeignClient生效
 
 > FooConfiguration does not need to be annotated with `@Configuration`. However, if it is, then take care to exclude it from any `@ComponentScan `that would otherwise include this configuration as it will become the default source for feign.Decoder, feign.Encoder, feign.Contract, etc., when specified. This can be avoided by putting it in a separate, non-overlapping package from any `@ComponentScan` or `@SpringBootApplication`, or it can be explicitly excluded in `@ComponentScan. `
 
@@ -66,7 +83,7 @@ feign:
         requestInterceptors:
           - com.example.FooRequestInterceptor
           - com.example.BarRequestInterceptor
-        decode404: false
+        decode404: false # 当发生http 404错误时，如果该字段位true，会调用decoder进行解码，否则抛出FeignException
         encoder: com.example.SimpleEncoder
         decoder: com.example.SimpleDecoder
         contract: com.example.SimpleContract
@@ -79,9 +96,6 @@ feign:
         readTimeout: 5000
         loggerLevel: basic
 ```
-
-### 配置的优先级
-If we create both `@Configuration` bean and configuration properties, configuration properties will win. It will override @Configuration values. But if you want to change the priority to @Configuration, you can change `feign.client.default-to-properties` to `false`.
 
 
 ## ThreadLocal
@@ -105,6 +119,8 @@ hystrix:
 
 ## 多个feign client 访问同一个server
 If we want to create multiple feign clients with the same name or url so that they would point to the same server but each with a different custom configuration then we have to use `contextId` attribute of the @FeignClient in order to avoid name collision of these configuration beans.
+默认的contextId=name
+
 ```java
 @FeignClient(contextId = "fooClient", name = "stores", configuration = FooConfiguration.class)
 public interface FooClient {
@@ -118,7 +134,6 @@ public interface BarClient {
 ```
 
 ## 手动创建feign clients
-
 
 
 ```java
@@ -154,9 +169,33 @@ class FooController {
 
 If Hystrix is on the classpath and `feign.hystrix.enabled=true`, Feign will wrap all methods with a circuit breaker. Returning a `com.netflix.hystrix.HystrixCommand` is also available. This lets you use reactive patterns (with a call to `.toObservable()` or `.observe()` or asynchronous use (with a call to `.queue()`).
 
+org.springframework.cloud.openfeign.FeignAutoConfiguration类
+```java
+@Configuration
+@ConditionalOnClass(name = "feign.hystrix.HystrixFeign")
+protected static class HystrixFeignTargeterConfiguration {
+    @Bean
+    @ConditionalOnMissingBean
+    public Targeter feignTargeter() {
+        return new HystrixTargeter();
+    }
+}
+
+@Configuration
+@ConditionalOnMissingClass("feign.hystrix.HystrixFeign")
+protected static class DefaultFeignTargeterConfiguration {
+    @Bean
+    @ConditionalOnMissingBean
+    public Targeter feignTargeter() {
+        return new DefaultTargeter();
+    }
+}
+```
 
 ### Feign Hystrix Fallbacks
+
 ```java
+// fallback指定的类必须实现@FeignClient标记的接口
 @FeignClient(name = "hello", fallback = HystrixClientFallback.class)
 protected interface HystrixClient {
     @RequestMapping(method = RequestMethod.GET, value = "/hello")
@@ -211,28 +250,29 @@ feign.compression.request.min-request-size=2048
 
 ## Feign logging
 A logger is created for each Feign client created.
-
-
-```yml
-# Feign logging only responds to the DEBUG level.
-logging.level.project.user.UserClient: DEBUG
-```
+1. 先通过配置文件，设置feign的debug级别
 ```java
 @Configuration
 public class FooConfiguration {
     @Bean
     Logger.Level feignLoggerLevel() {
-        //set the Logger.Level to FUL
+        //set the Logger.Level to FULL
         return Logger.Level.FULL;
     }
 }
 ```
-
 The `Logger.Level` object that you may configure per client, tells Feign how much to log. Choices are:
 - NONE, No logging (DEFAULT).
 - BASIC, Log only the request method and URL and the response status code and execution time.
 - HEADERS, Log the basic information along with request and response headers.
 - FULL, Log the headers, body, and metadata for both requests and responses.
+
+2. 再通过yml文件，指定哪一个feign client开启debug模式
+```yml
+logging：
+  level： 
+    project.user.UserClient: DEBUG # feign client的类名
+```
 
 
 ## Feign @QueryMap support
@@ -257,3 +297,22 @@ public class DemoTemplate {
 }
 ```
 
+## feign with ribbon
+配置文件在org.springframework.cloud.openfeign.ribbon路径下
+```xml
+<!-- 如果只有这个配置，使用DefaultFeignLoadBalancedConfiguration.java -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-openfeign</artifactId>
+</dependency>
+<!-- 如果有这个，使用HttpClientFeignLoadBalancedConfiguration.java -->
+<dependency>
+    <groupId>io.github.openfeign</groupId>-->
+    <artifactId>feign-httpclient</artifactId>-->
+</dependency>
+<!-- 如果有这个，并且配置feign.okhttp.enable=true，使用OkHttpFeignLoadBalancedConfiguration.java -->
+<!--        <dependency>
+<!--            <groupId>io.github.openfeign</groupId>-->
+<!--            <artifactId>feign-okhttp</artifactId>-->
+<!--        </dependency>-->
+```
