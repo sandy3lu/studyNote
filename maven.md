@@ -240,3 +240,114 @@ pom.xml文件中，jar的版本判断的两种途径
 </dependencies>
 ```
 
+## <module>
+在平时的Javaweb项目开发中为了便于后期的维护，我们一般会进行分层开发，最常见的就是分为domain（域模型层）、dao（数据库访问层）、service（业务逻辑层）、web（表现层），这样分层之后，各个层之间的职责会比较明确，后期维护起来也相对比较容易，
+
+system-parent
+　　　　|----pom.xml
+　　　　|----system-domain
+　　　　　　　　|----pom.xml
+　　　　|----system-dao
+　　　　　　　　|----pom.xml
+　　　　|----system-service
+　　　　　　　　|----pom.xml
+　　　　|----system-web
+　　　　　　　　|----pom.xml
+
+
+```xml
+<!-- system-parent目录中的pom.xml文件 -->
+<groupId>me.gacl</groupId>
+<artifactId>system-parent</artifactId>
+<version>1.0-SNAPSHOT</version>
+<!-- pom表示它是一个被继承的模块 -->
+<packaging>pom</packaging>
+
+<modules>
+    <module>system-domain</module>
+    <module>system-dao</module>
+    <module>system-service</module>
+    <module>system-web</module>
+</modules>
+
+
+<!-- system-domain目录中的pom.xml文件 -->
+<parent>
+ <groupId>me.gacl</groupId>
+ <artifactId>system-parent</artifactId>
+ <version>1.0-SNAPSHOT</version>
+</parent>   
+<artifactId>system-domain</artifactId>
+<packaging>jar</packaging>
+
+
+
+<!-- system-dao目录中的pom.xml文件 -->
+ <parent>
+  <groupId>me.gacl</groupId>
+  <artifactId>system-parent</artifactId>
+  <version>1.0-SNAPSHOT</version>
+ </parent>
+ <artifactId>system-dao</artifactId>
+ <packaging>jar</packaging>
+<dependencies>
+<!--system-dao需要使用到system-domain中的类，所以需要添加对system-domain模块的依赖-->
+  <dependency>
+    <groupId>me.gacl</groupId>
+    <artifactId>system-domain</artifactId>
+    <version>${project.version}</version>
+   </dependency>
+</dependencies>
+
+
+<!-- system-service目录中的pom.xml文件 -->
+<parent>
+    <groupId>me.gacl</groupId>
+    <artifactId>system-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>system-service</artifactId>
+  <packaging>jar</packaging>  
+ 
+  <dependencies>
+    <!--
+    system-service依赖system-dao和system-domain，
+    但是我们只需添加system-dao的依赖即可，因为system-dao已经依赖了system-domain
+    -->
+     <dependency>
+      <groupId>me.gacl</groupId>
+      <artifactId>system-dao</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+
+
+
+<!-- system-web目录中的pom.xml文件 -->
+ <parent>
+    <groupId>me.gacl</groupId>
+    <artifactId>system-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>system-web</artifactId>
+  <packaging>war</packaging>
+   
+  <dependencies>
+    <!--
+    system-web依赖system-service
+    -->
+     <dependency>
+      <groupId>me.gacl</groupId>
+      <artifactId>system-service</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+  <build>
+    <finalName>system-web</finalName>
+  </build>
+
+
+
+ ```
