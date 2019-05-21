@@ -11,6 +11,8 @@ Druid是Java语言中最好的数据库连接池。Druid能够提供强大的监
 </dependency
 ```
 
+
+
 ## application.yml配置
 ```yml
 spring:
@@ -20,7 +22,7 @@ spring:
     # 使用阿里的Druid连接池
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.jdbc.Driver
-    # 填写你数据库的url、登录名、密码和数据库名
+    # 数据库的url、登录名、密码和数据库名。Druid是根据url前缀来识别DriverClass的，这样使得配置更方便简洁
     url: jdbc:mysql://localhost:3306/databaseName?useSSL=false&characterEncoding=utf8
     username: root
     password: root
