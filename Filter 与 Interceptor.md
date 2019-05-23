@@ -19,7 +19,9 @@ Filter有如下几个种类。
 - Filter可以负责拦截多个请求或响应；一个请求或响应也可以被多个Filter拦截。
 
 
-创建Filter必须实现javax.servlet.Filter接口，在该接口中定义了如下三个方法。
+
+
+创建Filter必须实现`javax.servlet.Filter`接口，在该接口中定义了如下三个方法。
 - void init(FilterConfig config):用于完成Filter的初始化。
 - void destory():用于Filter销毁前，完成某些资源的回收。
 - void doFilter(ServletRequest request,ServletResponse response,FilterChain chain):实现过滤功能，该方法就是对每个请求及响应增加的额外处理。该方法可以实现对用户请求进行预处理(ServletRequest request)，也可实现对服务器响应进行后处理(ServletResponse response) — 它们的分界线为是否调用了`chain.doFilter()`,执行该方法之前，即对用户请求进行预处理；执行该方法之后，即对服务器响应进行后处理
