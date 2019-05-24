@@ -19,4 +19,30 @@ username=root
 password=
 ```
 
+# myBatis plus
+全新的 MyBatis-Plus 3.0 版本基于 JDK8，提供了 lambda 形式的调用
 
+## 引入包
+```xml
+<!-- Spring boot -->
+<dependency>
+    <groupId>com.baomidou</groupId>
+    <artifactId>mybatis-plus-boot-starter</artifactId>
+    <version>3.1.1</version>
+</dependency>
+```
+> 引入 MyBatis-Plus 之后请不要再次引入 MyBatis 以及 MyBatis-Spring，以避免因版本差异导致的问题。
+
+
+## 配置MapperScan
+```java
+@SpringBootApplication
+@MapperScan("com.baomidou.mybatisplus.samples.quickstart.mapper")
+public class Application {
+
+    public static void main(String[] args) {
+        SpringApplication.run(QuickStartApplication.class, args);
+    }
+
+}
+```
