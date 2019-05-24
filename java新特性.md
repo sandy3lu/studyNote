@@ -61,8 +61,45 @@ public class Test {
 }
 ```
 
+# 接口中定义静态方法
+```java
+private interface Defaulable {
+    // the implementer may or 
+    // may not implement (override) them.
+    default String notRequired() { 
+        return "Default implementation"; 
+    }        
+}
 
-# 原子long
+private static class DefaultableImpl implements Defaulable {
+}
+
+private static class OverridableImpl implements Defaulable {
+    @Override
+    public String notRequired() {
+        return "Overridden implementation";
+    }
+}
+
+private interface DefaulableFactory {
+    // Interfaces now allow static methods
+    static Defaulable create( Supplier< Defaulable > supplier ) {
+        return supplier.get();
+    }
+}
+
+//下面的代码片段整合了默认方法和静态方法的使用场景：
+public static void main( String[] args ) {
+    Defaulable defaulable = DefaulableFactory.create( DefaultableImpl::new );
+    System.out.println( defaulable.notRequired() );// Default implementation
+
+    defaulable = DefaulableFactory.create( OverridableImpl::new );
+    System.out.println( defaulable.notRequired() ); // Overridden implementation
+}
+```
+
+
+# 原子 longAdder
 jdk8引入LongAdder，比AtomicLong更高效了。
 - AtomicLong的实现方式是内部有个value 变量，当多线程并发自增，自减时，均通过cas 指令从机器指令级别操作保证并发的原子性
 - LongAdder中包含了一个Cell 数组，Cell是Striped64的一个内部类，顾名思义，Cell 代表了一个最小单元。Cell内部有一个非常重要的value变量，并且提供了一个cas更新其值的方法。
@@ -175,4 +212,98 @@ Optional<String> username = Optional
 System.out.println("Username is: " + username.orElse("Unknown"));
 
 ```
+
+# java8 Supplier接口
+在开发中，我们经常会遇到一些需要延迟计算的情形，比如某些运算非常消耗资源，如果提前算出来却没有用到，会得不偿失。在计算机科学中，有个专门的术语形容它：惰性求值。惰性求值是一种求值策略，也就是把求值延迟到真正需要的时候。在Java里，我们有一个专门的设计模式几乎就是为了处理这种情形而生的：Proxy。不过，现在我们有了新的选择：Supplier
+
+## 定义
+只有一个get的抽象类，没有默认的方法以及静态的方法，传入一个泛型T的，get方法，返回一个泛型T
+```java
+@FunctionalInterface
+public interface Supplier<T> {
+    /**
+     * Gets a result.
+     *
+     * @return a result
+     */
+    T get();
+}
+```
+
+这个接口，只是为我们提供了一个创建好的对象，这也符号接口的语义的定义，提供者，提供一个对象，
+直接理解成一个创建对象的工厂，就可以了
+
+## 例子
+
+```java
+Supplier<String> supplier = String::new;        
+System.out.println(supplier.get());//""        
+Supplier<Emp> supplierEmp = Emp::new;        
+Emp emp = supplierEmp.get();        
+emp.setName("dd");        
+System.out.println(emp.getName());//dd
+
+// supplier的实现demo
+Supplier ultimateAnswerSupplier = new Supplier(){
+    @Override
+    public Integer get(){
+        //Long time computation
+        return 42;
+    }
+};
+
+```
+
+# 方法引用
+方法引用使得开发者可以直接引用现存的方法、Java类的构造方法或者实例对象。方法引用和Lambda表达式配合使用，使得java类的构造方法看起来紧凑而简洁，没有很多复杂的模板代码。
+
+## 例子
+```java
+public static class Car {
+    public static Car create( final Supplier< Car > supplier ) {
+        return supplier.get();
+    }              
+
+    public static void collide( final Car car ) {
+        System.out.println( "Collided " + car.toString() );
+    }
+
+    public void follow( final Car another ) {
+        System.out.println( "Following the " + another.toString() );
+    }
+
+    public void repair() {   
+        System.out.println( "Repaired " + this.toString() );
+    }
+}
+```
+
+
+```java
+//第一种方法引用的类型是构造器引用，语法是Class::new，或者更一般的形式：Class<T>::new。注意：这个构造器没有参数。
+final Car car = Car.create( Car::new );
+final List< Car > cars = Arrays.asList( car );
+
+//第二种方法引用的类型是静态方法引用，语法是Class::static_method。注意：这个方法接受一个Car类型的参数。
+cars.forEach( Car::collide );
+
+//第三种方法引用的类型是某个类的成员方法的引用，语法是Class::method，注意，这个方法没有定义入参：
+cars.forEach( Car::repair );
+
+//第四种方法引用的类型是某个实例对象的成员方法的引用，语法是instance::method。注意：这个方法接受一个Car类型的参数：
+final Car police = Car.create( Car::new );
+cars.forEach( police::follow );
+```
+
+# 注解
+## 重复注解
+自从Java 5中引入注解以来，这个特性开始变得非常流行，并在各个框架和项目中被广泛使用。不过，注解有一个很大的限制是：在同一个地方不能多次使用同一个注解。Java 8打破了这个限制，引入了重复注解的概念，允许在同一个地方多次使用同一个注解。
+在Java 8中使用`@Repeatable`注解定义重复注解，实际上，这并不是语言层面的改进，而是编译器做的一个trick，底层的技术仍然相同。
+
+## 拓宽注解的应用场景
+Java 8拓宽了注解的应用场景。现在，注解几乎可以使用在任何元素上：局部变量、接口类型、超类和接口实现类，甚至可以用在函数的异常定义上
+
+ElementType.TYPE_USER和ElementType.TYPE_PARAMETER是Java 8新增的两个注解，用于描述注解的使用场景
+
+
 
