@@ -46,3 +46,46 @@ public class Application {
 
 }
 ```
+
+# 代码生成器
+AutoGenerator 是 MyBatis-Plus 的代码生成器，通过 AutoGenerator 可以快速生成 Entity、Mapper、Mapper XML、Service、Controller 等各个模块的代码，极大的提升了开发效率
+## 依赖
+MyBatis-Plus 从 3.0.3 之后移除了代码生成器与模板引擎的默认依赖，需要手动添加相关依赖
+```xml
+<!-- 添加 代码生成器 依赖 -->
+<dependency>
+    <groupId>com.baomidou</groupId>
+    <artifactId>mybatis-plus-generator</artifactId>
+    <version>3.1.1</version>
+</dependency>
+```
+
+## 模板引擎
+MyBatis-Plus 支持 Velocity（默认）、Freemarker、Beetl，用户可以选择自己熟悉的模板引擎，如果都不满足您的要求，可以采用自定义模板引擎
+```xml
+<!-- Freemarker模板 -->
+<dependency>
+    <groupId>org.freemarker</groupId>
+    <artifactId>freemarker</artifactId>
+    <version>2.3.28</version>
+</dependency>
+```
+
+如果您选择了非默认引擎，需要在 AutoGenerator 中 设置模板引擎。
+```java
+AutoGenerator generator = new AutoGenerator();
+// set freemarker engine
+generator.setTemplateEngine(new FreemarkerTemplateEngine());
+// set beetl engine
+generator.setTemplateEngine(new BeetlTemplateEngine());
+// set custom engine (reference class is your custom engine class)
+generator.setTemplateEngine(new CustomTemplateEngine());
+```
+
+## 编写配置
+```java
+
+
+```
+
+
