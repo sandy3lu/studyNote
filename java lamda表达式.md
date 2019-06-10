@@ -47,7 +47,7 @@ public interface FunctionalDefaultMethods {
 lambda表达式我们可以理解对于函数式接口的抽象方法的具体实现，这样当有一个需要函数式接口参数的方法时，我们就可以给其传递一个对应的lambda表达式作为参数。执行的时候就会自动执行函数式接口中的唯一方法，也就是传递过去的lambda表达式了。
 
 ## 例子
-我们要对list其进行排序，有一个对应的list.sort(Comparator<? super E> c)方法，需要我们传递一个Comparator接口的实例，而Comparator之中唯一的抽象方法为int compare(T o1, T o2)，符合函数式接口的定义，并且它还使用了@FunctionalInterface注解，所以可以使用lambda表达式来实现这个方法:
+对list其进行排序，有一个对应的list.sort(Comparator<? super E> c)方法，需要我们传递一个Comparator接口的实例，而Comparator之中唯一的抽象方法为int compare(T o1, T o2)，符合函数式接口的定义，并且它还使用了@FunctionalInterface注解，所以可以使用lambda表达式来实现这个方法:
 ```java
 List<String> list = Arrays.asList("d", "h", "a", "z", "b");
 list.sort((String a, String b) -> {

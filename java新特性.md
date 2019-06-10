@@ -255,7 +255,7 @@ Supplier ultimateAnswerSupplier = new Supplier(){
 ```
 
 # 方法引用
-方法引用使得开发者可以直接引用现存的方法、Java类的构造方法或者实例对象。方法引用和Lambda表达式配合使用，使得java类的构造方法看起来紧凑而简洁，没有很多复杂的模板代码。
+方法引用使得开发者可以直接引用现存的方法、Java类的构造方法或者实例对象。方法引用和Lambda表达式配合使用，使得java类的构造方法看起来紧凑而简洁。
 
 ## 例子
 ```java
@@ -263,24 +263,21 @@ public static class Car {
     public static Car create( final Supplier< Car > supplier ) {
         return supplier.get();
     }              
-
+    //注意：这个方法接受一个Car类型的参数。
     public static void collide( final Car car ) {
         System.out.println( "Collided " + car.toString() );
     }
-
+    //注意：这个方法接受一个Car类型的参数：
     public void follow( final Car another ) {
         System.out.println( "Following the " + another.toString() );
     }
-
+    //注意，这个方法没有定义入参
     public void repair() {   
         System.out.println( "Repaired " + this.toString() );
     }
 }
-```
 
-
-```java
-//第一种方法引用的类型是构造器引用，语法是Class::new，或者更一般的形式：Class<T>::new。注意：这个构造器没有参数。
+//第一种方法引用的类型是构造器引用，语法是Class::new，或者更一般的形式：Class<T>::new。这个构造器没有参数。
 final Car car = Car.create( Car::new );
 final List< Car > cars = Arrays.asList( car );
 
@@ -297,13 +294,26 @@ cars.forEach( police::follow );
 
 # 注解
 ## 重复注解
-自从Java 5中引入注解以来，这个特性开始变得非常流行，并在各个框架和项目中被广泛使用。不过，注解有一个很大的限制是：在同一个地方不能多次使用同一个注解。Java 8打破了这个限制，引入了重复注解的概念，允许在同一个地方多次使用同一个注解。
+自从Java 5中引入注解以来，这个特性开始变得非常流行，注解有一个很大的限制是：在同一个地方不能多次使用同一个注解。Java 8打破了这个限制，引入了重复注解的概念，允许在同一个地方多次使用同一个注解。
 在Java 8中使用`@Repeatable`注解定义重复注解，实际上，这并不是语言层面的改进，而是编译器做的一个trick，底层的技术仍然相同。
 
 ## 拓宽注解的应用场景
 Java 8拓宽了注解的应用场景。现在，注解几乎可以使用在任何元素上：局部变量、接口类型、超类和接口实现类，甚至可以用在函数的异常定义上
 
 ElementType.TYPE_USER和ElementType.TYPE_PARAMETER是Java 8新增的两个注解，用于描述注解的使用场景
+
+# Stream
+
+Stream API是把真正的函数式编程风格引入到Java中。其实简单来说可以把Stream理解为MapReduce，当然Google的MapReduce的灵感也是来自函数式编程。她其实是一连串支持连续、并行聚集操作的元素。从语法上看，也很像linux的管道、或者链式编程，代码写起来简洁明了
+
+
+# Date/Time API (JSR 310)
+
+Java 8新的Date-Time API (JSR 310)受Joda-Time的影响，提供了新的java.time包，可以用来替代 java.util.Date和java.util.Calendar。一般会用到Clock、LocaleDate、LocalTime、LocaleDateTime、ZonedDateTime、Duration这些类
+
+## JavaScript引擎Nashorn
+
+Nashorn允许在JVM上开发运行JavaScript应用，允许Java与JavaScript相互调用
 
 
 
