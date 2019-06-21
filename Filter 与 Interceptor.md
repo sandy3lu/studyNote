@@ -1,4 +1,25 @@
 
+# Servlet和Filter的区别
+Filter对用户请求进行预处理，接着将请求交给Servlet进行处理并生成响应，最后Filter再对服务器响应进行后处理。
+
+Filter有如下几个用处：
+- Filter可以进行对特定的url请求和相应做预处理和后处理。
+- 在HttpServletRequest到达Servlet之前，拦截客户的HttpServletRequest。
+根据需要检查HttpServletRequest，也可以修改HttpServletRequest头和数据。
+- 在HttpServletResponse到达客户端之前，拦截HttpServletResponse。
+根据需要检查HttpServletResponse，也可以修改HttpServletResponse头和数据。
+
+实际上Filter和Servlet极其相似，区别只是`Filter不能直接对用户生成响应`。实际上Filter里doFilter()方法里的代码就是从多个Servlet的service()方法里抽取的通用代码，通过使用Filter可以实现更好的复用。
+
+# Filter和Servlet的生命周期
+1. Filter在web服务器启动时初始化
+2. 如果某个Servlet配置了 ，该Servlet也是在Tomcat（Servlet容器）启动时初始化。
+3. 如果Servlet没有配置 ，该Servlet不会在Tomcat启动时初始化，而是在请求到来时初始化。
+4. 每次请求， Request都会被初始化，响应请求后，请求被销毁。
+5. Servlet初始化后，将不会随着请求的结束而注销。
+6. 关闭Tomcat时，Servlet、Filter依次被注销。
+
+
 # Filter
 
 Servlet中的过滤器Filter是实现了javax.servlet.Filter接口的服务器端程序。

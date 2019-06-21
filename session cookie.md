@@ -1,0 +1,23 @@
+
+# Session与Cookie
+Cookie可以让服务端跟踪每个客户端的访问，但是每次客户端的访问都必须传回这些Cookie，如果Cookie很多，则无形的增加了客户端与服务端的数据传输量，
+
+cookie存储在客户端。session存储在服务器。
+
+而Session则很好地解决了这个问题，同一个客户端每次和服务端交互时，将数据存储通过Session到服务端，不需要每次都传回所有的Cookie值，而是传回一个ID，每个客户端第一次访问服务器生成的唯一的ID，客户端只要传回这个ID就行了，这个ID通常为NAME为JSESSIONID的一个Cookie。这样服务端就可以通过这个ID，来将存储到服务端的KV值取出了。
+
+
+# Session和Cookie的超时问题
+
+
+# Cookie的安全问题
+
+# 分布式Session框架
+
+配置服务器，Zookeeper集群管理服务器可以统一管理所有服务器的配置文件
+
+共享这些Session存储在一个分布式缓存中，可以随时写入和读取，而且性能要很好，如Memcache，Tair。
+
+封装一个类继承自HttpSession，将Session存入到这个类中然后再存入分布式缓存中
+
+由于Cookie不能跨域访问，要实现Session同步，要同步SessionID写到不同域名下。

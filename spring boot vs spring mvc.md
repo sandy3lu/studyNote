@@ -1,4 +1,11 @@
 
+# SpringMVC运行原理
+
+1. 客户端请求提交到DispatcherServlet
+2. 由DispatcherServlet控制器查询HandlerMapping，找到并分发到指定的Controller中。
+3. Controller调用业务逻辑处理后，返回ModelAndView
+4. DispatcherServlet查询一个或多个ViewResoler视图解析器，找到ModelAndView指定的视图
+5. 视图负责将结果显示到客户端
 
 # spring和springMvc：
 

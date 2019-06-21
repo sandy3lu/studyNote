@@ -1,7 +1,12 @@
+# 线程状态
+
+![](pic/线程状态.png)
+
+Running表示运行状态，Runnable表示就绪状态（万事俱备，只欠CPU），Blocked表示阻塞状态，阻塞状态又有多种情况，可能是因为调用wait()方法进入等待池，也可能是执行同步方法或同步代码块进入等锁池，或者是调用了sleep()方法或join()方法等待休眠或其他线程结束，或是因为发生了I/O中断
 
 
 # ReentrantLock
-在JDK5.0版本之前，重入锁的性能远远好于synchronized关键字，JDK6.0版本之后synchronized 得到了大量的优化，二者性能也不分伯仲，但是重入锁是可以完全替代synchronized关键字的。除此之外，重入锁又自带一系列高逼格UBFF：可中断响应、锁申请等待限时、公平锁。另外可以结合Condition来使用，使其更是逼格满满。
+在JDK5.0版本之前，重入锁的性能远远好于synchronized关键字，JDK6.0版本之后synchronized 得到了大量的优化，二者性能也不分伯仲，但是重入锁是可以完全替代synchronized关键字的。除此之外，重入锁：可中断响应、锁申请等待限时、公平锁。另外可以结合Condition来使用。
 
 ```java
 import java.util.concurrent.locks.ReentrantLock;
@@ -257,6 +262,21 @@ public class ReentrantLockWithConditon implements Runnable{
         lock.unlock();
     }
 }
+```
+
+# Thread类的sleep()方法和对象的wait()方法都可以让线程暂停执行，它们有什么区别？
+sleep()方法（休眠）是线程类（Thread）的静态方法，调用此方法会让当前线程暂停执行指定的时间，`将执行机会（CPU）让给其他线程，但是对象的锁依然保持`，因此休眠时间结束后会自动恢复（线程回到就绪状态）。
+
+wait()是Object类的方法，调用对象的wait()方法导致`当前线程放弃对象的锁（线程暂停执行），进入对象的等待池（wait pool）`，只有调用对象的notify()方法（或notifyAll()方法）时才能唤醒等待池中的线程进入等锁池（lock pool），如果线程重新获得对象的锁就可以进入就绪状态。
+
+# 线程的sleep()方法和yield()方法有什么区别？
+1、sleep()方法给其他线程运行机会时不考虑线程的优先级，因此会给低优先级的线程以运行的机会；`yield()方法只会给相同优先级或更高优先级的线程以运行的机会`；
+
+2、 线程执行sleep()方法后转入阻塞（blocked）状态，而执行yield()方法后转入就绪（ready）状态；
+
+3、sleep()方法声明抛出InterruptedException，而yield()方法没有声明任何异常；
+
+4、sleep()方法比yield()方法（跟操作系统CPU调度相关）具有更好的可移植性。
 
 
 

@@ -18,6 +18,16 @@ url=jdbc:mysql://localhost:3306/test?serverTimezone=UTC&useUnicode=true&characte
 username=root
 password=
 ```
+# mybatis
+
+每一个Mybatis的应用程序都以一个SqlSessionFactory对象的实例为核心。
+- 首先用字节流通过Resource将配置文件读入，
+- 然后通过SqlSessionFactoryBuilder().build方法创建SqlSessionFactory，
+- 然后再通过SqlSessionFactory.openSession()方法创建一个SqlSession为每一个数据库事务服务。
+- 经历了Mybatis初始化 –>创建SqlSession –>运行SQL语句，返回结果三个过程
+
+
+
 
 # myBatis plus
 全新的 MyBatis-Plus 3.0 版本基于 JDK8，提供了 lambda 形式的调用
