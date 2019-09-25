@@ -104,4 +104,88 @@ ATOM RegisterClass(CONST WNDCLASS *lpWndClass);
 ```C
 RegisterClass（&wc）；
 ```
+# CDialog
+## DoDataExchange()
+在程序运行界面中，用户往往会改变控件的属性，例如，在编辑框中输入字符串，或者改变组合框的选中项，又或者改变复选框的选中状态等。控件的属性改变后MFC会相应修改控件关联变量的值。这种同步的改变是通过MFC为对话框类自动生成的成员函数DoDataExchange()来实现的，这也叫做对话框的数据交换和检验机制。
+
+但是这种数据交换机制中，DoDataExchange()并不是被自动调用的，而是需要我们在程序中调用CDialogEx::UpdateData()函数，由UpdateData()函数再去自动调用DoDataExchange()的。
+
+       CDialogEx::UpdateData()函数的原型为：
+
+       BOOL UpdateData(BOOL bSaveAndValidate = TRUE);
+
+       参数：bSaveAndValidate用于指示数据传输的方向，TRUE表示从控件传给变量，FALSE表示从变量传给控件。默认值是TRUE，即从控件传给变量。
+
+       返回值：CDialogEx::UpdateData()函数的返回值表示操作是否成功，成功则返回TRUE，否则返回FALSE。
+
+
+## DoModal()
+CDialog::DoModal()的返回值为IDOK，IDCANCEL。表明操作者在对话框上选择“确认”或是“取消”。由于在对话框销毁前DoModal不会返回，所以可以使用局部变量来引用对象。在退出函数体后对象同时也会被销毁。而对于无模式对话框则不能这样使用
+
+同样的在你的对话框类中为了向调用者返回不同的值可以调用CDialog::OnOK()或是CDialog::OnCancel()以返回IDOK或IDCANCEL，如果你希望返回其他的值，你需要调用 
+CDialog::EndDialog( int nResult );其中nResult会作为DoModal()调用的返回值。
+```C
+void CMy52_s1View::OnLButtonDown(UINT nFlags, CPoint point) 
+{ //创建对话框并得到返回值
+	CView::OnLButtonDown(nFlags, point);
+	CTestDlg dlg;
+	int iRet=dlg.DoModal();
+	CString szOut;
+	szOut.Format("return value %d",iRet);
+	AfxMessageBox(szOut);
+}
+//重载OnOK,OnCancel
+void CTestDlg::OnOK()
+{//什么也不做
+}
+void CTestDlg::OnCancel()
+{//什么也不做
+}
+//在对话框中对三个按钮消息进行映射
+void CTestDlg::OnExit1() 
+{
+	CDialog::OnOK();
+}
+void CTestDlg::OnExit2() 
+{
+	CDialog::OnCancel();
+}
+void CTestDlg::OnExit3() 
+{
+	CDialog::EndDialog(0XFF);
+}
+```
+## OnInitDialog()
+此外在对话框被生成是会自动调用BOOL CDialog::OnInitDialog()，你如果需要在对话框显示前对其中的控件进行初始化，你需要重载这个函数，并在其中填入相关的初始化代码。
+
+利用ClassWizard可以方便的产生一些默认代码，首先打开ClassWizard，选择相应的对话框类，在右边的消息列表中选择WM_INITDIALOG并双击，如图，ClassWizard会自动产生相关代码，代码如下：
+
+BOOL CTestDlg::OnInitDialog() 
+{
+	/*先调用父类的同名函数*/
+	CDialog::OnInitDialog();
+	/*填写你的初始化代码*/	
+	return TRUE; 
+}
+
+# VC mysql
+
+C:\Program Files\MySQL\MySQL Server 5.6
+
+1. 打开项目 –> 属性 –>VC++目录,把include和lib分别添加到包含目录和库目录即可
+![](pic/vs-mysql.jpg)
+
+2. 打开项目 –> 属性 –> 链接器 –> 输入 –> 附加依赖项 ,把libmysql.lib添加进去，也可以在cpp文件中手动添加.
+
+3. 因为是动态链接库，所以在做完上面的配置后，要将MySQL安装目录下的libmysql.dll文件拷贝到MFC工程目录下，如果以后要发行的话这个也要打包进去。否则运行时会提示缺少此库。
+
+## Q & A
+
+因为我的系统是64位的，当时安装的mysql也是64位的，但是我用visual sutido 2013创建的项目默认是32位的，所以导致该错误出现，解决方法最好就是改用32位的mysql，也可以将项目编译为64位，步骤如下：
+1 需要项目属性---->配置属性--->连接器--->高级-->目标计算机,改为64位系统，
+2解决方案页 ---> 属性--->配置属性--->平台 ：改为64位系统
+
+
+
+
 
